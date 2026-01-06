@@ -99,15 +99,18 @@ def fetch_text_from_url(url):
         return None
 
 def run_gemini_analysis(content_text, content_source):
-    # Hardcoded API Key as per Sovereign AI T-Class 2.0 Standard Env
-   if "GEMINI_API_KEY" in st.secrets:
-    api_key = st.secrets["GEMINI_API_KEY"]
-else:
-    st.error("설정(Secrets)에 GEMINI_API_KEY를 등록해주세요!")
-    st.stop()
+    # API 키 설정 (들여쓰기 및 변수명 수정)
+    if "GEMINI_API_KEY" in st.secrets:
+        api_key = st.secrets["GEMINI_API_KEY"]
+    else:
+        st.error("설정(Secrets)에 GEMINI_API_KEY를 등록해주세요!")
+        st.stop()
+
+    # 모델명 그대로 유지
     MODEL_NAME = "gemini-3-pro-preview"
     
-    genai.configure(api_key=API_KEY)
+    # 설정된 api_key 변수를 사용하여 구성
+    genai.configure(api_key=api_key)
     model = genai.GenerativeModel(MODEL_NAME)
     
     system_prompt = """
