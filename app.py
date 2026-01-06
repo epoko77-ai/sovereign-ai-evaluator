@@ -100,7 +100,11 @@ def fetch_text_from_url(url):
 
 def run_gemini_analysis(content_text, content_source):
     # Hardcoded API Key as per Sovereign AI T-Class 2.0 Standard Env
-    API_KEY = "AIzaSyD0On4UCCdbkYCvDkOd18M9H1Wq5fLotXM"
+   if "GEMINI_API_KEY" in st.secrets:
+    api_key = st.secrets["GEMINI_API_KEY"]
+else:
+    st.error("설정(Secrets)에 GEMINI_API_KEY를 등록해주세요!")
+    st.stop()
     MODEL_NAME = "gemini-3-pro-preview"
     
     genai.configure(api_key=API_KEY)
