@@ -98,19 +98,20 @@ def fetch_text_from_url(url):
         st.error(f"Error fetching URL: {e}")
         return None
 
+@st.cache_data(show_spinner=True)
 def run_gemini_analysis(content_text, content_source):
-    # API 키 설정 (들여쓰기 및 변수명 수정)
-    if "GEMINI_API_KEY" in st.secrets:
-        api_key = st.secrets["GEMINI_API_KEY"]
-    else:
-        st.error("설정(Secrets)에 GEMINI_API_KEY를 등록해주세요!")
-        st.stop()
+    try:
+        API_KEY = st.secrets["GEMINI_API_KEY"]
+    except FileNotFoundError:
+        st.error("Secrets not found. Please set GEMINI_API_KEY in .streamlit/secrets.toml or your deployment settings.")
+        return None, None
+    except KeyError:
+        st.error("GEMINI_API_KEY not set in secrets.")
+        return None, None
 
-    # 모델명 그대로 유지
     MODEL_NAME = "gemini-3-pro-preview"
     
-    # 설정된 api_key 변수를 사용하여 구성
-    genai.configure(api_key=api_key)
+    genai.configure(api_key=API_KEY)
     model = genai.GenerativeModel(MODEL_NAME)
     
     system_prompt = """
@@ -264,7 +265,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### About")
     st.markdown("**Created by epoko77**")
-    st.markdown("[GitHub Repository](https://github.com/epoko77-ai/sovereign-ai-tclass-2.0)")
+    st.markdown("[GitHub Repository](https://github.com/epoko77-ai/sovereign-ai-evaluator)")
 
 # Main Content
 col1, col2 = st.columns([1, 1])
@@ -311,42 +312,41 @@ with col1:
         
         if st.button("🚀 Run Auto-Analysis", type="primary"):
             with col2:
-                with st.spinner("Analyzing document against T-Class 2.0 Standards..."):
-                    try:
-                        full_response, model_name = run_gemini_analysis(st.session_state['extracted_text'], st.session_state['source_name'])
-                        
-                        # Parse Split (Markdown vs JSON)
-                        parts = full_response.split("__JSON_START__")
-                        markdown_report = parts[0].strip()
-                        
-                        scores = {}
-                        if len(parts) > 1:
-                            json_part = parts[1].split("__JSON_END__")[0].strip()
-                            try:
-                                scores = json.loads(json_part)
-                            except:
-                                st.warning("Failed to parse Sovereignty Scores.")
-                        
-                        st.subheader("🔍 Analysis Output")
-                        
-                        # Display Result Card (Markdown)
-                        with st.container(border=True):
-                            st.markdown(markdown_report)
-                        
-                        # Display Radar Chart
-                        if scores:
-                            st.markdown("### 📊 Sovereignty Radar")
-                            fig = make_radar_chart(scores)
-                            st.plotly_chart(fig, use_container_width=True)
-                        
-                    except Exception as e:
-                        st.error(f"An error occurred during analysis: {str(e)}")
+                try:
+                    full_response, model_name = run_gemini_analysis(st.session_state['extracted_text'], st.session_state['source_name'])
+                    
+                    # Parse Split (Markdown vs JSON)
+                    parts = full_response.split("__JSON_START__")
+                    markdown_report = parts[0].strip()
+                    
+                    scores = {}
+                    if len(parts) > 1:
+                        json_part = parts[1].split("__JSON_END__")[0].strip()
+                        try:
+                            scores = json.loads(json_part)
+                        except:
+                            st.warning("Failed to parse Sovereignty Scores.")
+                    
+                    st.subheader("🔍 Analysis Output")
+                    
+                    # Display Result Card (Markdown)
+                    with st.container(border=True):
+                        st.markdown(markdown_report)
+                    
+                    # Display Radar Chart
+                    if scores:
+                        st.markdown("### 📊 Sovereignty Radar")
+                        fig = make_radar_chart(scores)
+                        st.plotly_chart(fig, use_container_width=True)
+                    
+                except Exception as e:
+                    st.error(f"An error occurred during analysis: {str(e)}")
 
 # Footer
 st.markdown("""
 <div class="footer">
     <hr>
-    <p>Created by <b>epoko77</b> | <a href="https://github.com/epoko77-ai/sovereign-ai-tclass-2.0" target="_blank">GitHub Repository</a></p>
+    <p>Created by <b>epoko77</b> | <a href="https://github.com/epoko77-ai/sovereign-ai-evaluator" target="_blank">GitHub Repository</a></p>
     <p>© 2026 Sovereign AI Research Lab. All rights reserved.</p>
 </div>
 """, unsafe_allow_html=True)
