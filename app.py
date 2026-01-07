@@ -281,6 +281,7 @@ with col1:
     
     with tab1:
         uploaded_file = st.file_uploader("Upload Technical Report (PDF)", type="pdf")
+        st.caption("⚠️ We recommend using Technical Reports. Analysis derived from Model Cards or URLs may not be accurate.")
         if uploaded_file is not None:
             if st.button("Read PDF", key="read_pdf"):
                 with st.spinner("Extracting text from PDF..."):
